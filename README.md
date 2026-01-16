@@ -1,1 +1,10 @@
-# Examen-Final-Python-API-Developer
+# Examen Final - Python API Developer
+
+## III. PARTE TEÓRICA
+
+1. **Si te piden desarrollar una aplicación muy pequeña que solo debe saludar al usuario y no necesita base de datos ni panel de administración, ¿por qué elegir Flask en lugar de Django sería una decisión más inteligente? Argumenta basándote en la simplicidad del código inicial.** ... "Elegir Flask es más inteligente porque es un micro-framework. Mientras que Django crea una estructura pesada con archivos que no usaríamos (admin, auth, settings complejos), Flask permite crear un saludo con apenas 5 líneas de código en un solo archivo. Menos código significa menor consumo de recursos y mayor velocidad de despliegue para tareas simples."
+2. **Imagina que el menú de un restaurante es una API. El cliente (Client) pide un plato al mesero (Interface) y la cocina (Server) lo prepara. Siguiendo esta analogía, ¿por qué el cliente no entra directamente a la cocina a cocinar su comida? Relaciona tu respuesta con la seguridad y el orden en el intercambio de datos en una API.** ... "El cliente no entra a la cocina porque el mesero (API) actúa como una capa de abstracción y seguridad. Si el cliente entra, podría causar desorden, ver recetas secretas o manipular ingredientes indebidamente. En una API, esto evita que el usuario acceda directamente a la base de datos, garantizando que solo se entreguen los datos permitidos bajo reglas estrictas."
+3. **Imagina que REST es como hacer una llamada telefónica para preguntar algo y colgar, mientras que WebSockets es dejar la llamada abierta todo el día para hablar en cualquier momento. ¿En qué situación de una aplicación real (ejemplo: un banco o un juego online) crees que es mejor dejar la 'llamada abierta' y por qué?** ... "Para un juego online, es mejor dejar la 'llamada abierta' (WebSockets). En un juego, la posición de los jugadores cambia cada milisegundo; si usáramos REST, el dispositivo tendría que preguntar '¿dónde están los demás?' miles de veces por minuto, saturando el servidor. Con WebSockets, el servidor empuja la información en tiempo real apenas ocurre un cambio."
+
+## IV. EVIDENCIAS (Capturas de Postman)
+(Aquí pegarás las fotos de tus pruebas)
