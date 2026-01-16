@@ -18,8 +18,8 @@ POST /estudiantes: Crear un nuevo registro de estudiante.
 ![Lista Actualizada](https://github.com/user-attachments/assets/fda202b0-2a5b-404e-b288-475aa6232d6b)
 
 PUT /estudiantes/<id>: Actualizar la información de un estudiante existente.
-Actualizar Datos](https://github.com/user-attachments/assets/7f307563-1012-4a19-b9b9-c406a8ad44dd)
-![![Lista Actualizada 3](https://github.com/user-attachments/assets/d32d6c5d-e4e9-401e-8248-1c016682d960)
+![Actualizar Datos](https://github.com/user-attachments/assets/90da183c-4585-4363-bd94-51fda8751324)
+![Lista Actualizada 3](https://github.com/user-attachments/assets/05491a00-c4ff-430a-8d91-136a70f8c314)
 
 DELETE /estudiantes/<id>: Eliminar un estudiante de la base de datos.
 ![Eliminar Registro](https://github.com/user-attachments/assets/3690e42c-7eb0-4f24-9cde-45b249f75226)
