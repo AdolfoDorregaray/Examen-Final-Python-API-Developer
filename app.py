@@ -1,130 +1,107 @@
 import os
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-
-# Configuración de la base de datos SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///estudiantes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- 1. MODELO DE BASE DE DATOS ---
 class Estudiante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     apellido = db.Column(db.String(100), nullable=False)
     aprobado = db.Column(db.Boolean, default=False)
     nota = db.Column(db.Float, nullable=False)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha = db.Column(db.DateTime, default=datetime.now)
 
-# --- 2. CARGA DE DATOS DESDE estudiante.json (Formato MongoDB) ---
 def cargar_datos_iniciales():
     if Estudiante.query.count() == 0:
         if os.path.exists('estudiante.json'):
             with open('estudiante.json', 'r', encoding='utf-8') as f:
                 datos_json = json.load(f)
                 for item in datos_json:
-                    # Limpiamos el formato de MongoDB ($date)
-                    fecha_str = item['fecha']['$date'].replace('Z', '')
-                    fecha_dt = datetime.fromisoformat(fecha_str)
-                    
+                    f_str = item['fecha']['$date'].replace('Z', '')
+                    f_dt = datetime.fromisoformat(f_str)
+                    val_nota = float(item['nota'])
                     nuevo = Estudiante(
                         nombre=item['nombre'],
                         apellido=item['apellido'],
-                        aprobado=item['aprobado'],
-                        nota=item['nota'],
-                        fecha=fecha_dt
+                        aprobado=(val_nota > 5.0),
+                        nota=val_nota,
+                        fecha=f_dt
                     )
                     db.session.add(nuevo)
             db.session.commit()
-            print(">>> Base de datos inicializada con éxito desde estudiante.json")
 
 with app.app_context():
     db.create_all()
     cargar_datos_iniciales()
 
-# --- 3. ENDPOINTS API REST ---
+@app.route('/')
+def index():
+    todos = Estudiante.query.all()
+    return render_template('index.html', estudiantes=todos)
 
-# GET /estudiantes: Lista completa
-@app.route('/estudiantes', methods=['GET'])
-def get_estudiantes():
-    estudiantes = Estudiante.query.all()
-    output = []
-    for e in estudiantes:
-        output.append({
-            "id": e.id,
-            "nombre": e.nombre,
-            "apellido": e.apellido,
-            "aprobado": e.aprobado,
-            "nota": e.nota,
-            "fecha": e.fecha.strftime('%Y-%m-%d')
-        })
-    return jsonify(output)
-
-# GET /estudiantes/<id>: Detalle de un estudiante
-@app.route('/estudiantes/<int:id>', methods=['GET'])
-def get_estudiante(id):
+@app.route('/web/estudiante/<int:id>')
+def web_ver_uno(id):
     e = Estudiante.query.get_or_404(id)
-    return jsonify({"id": e.id, "nombre": e.nombre, "nota": e.nota, "aprobado": e.aprobado})
+    return render_template('index.html', estudiantes=[e], modo_detalle=True)
 
-# POST /estudiantes: Crear nuevo
-@app.route('/estudiantes', methods=['POST'])
-def crear_estudiante():
-    data = request.get_json()
-    nuevo = Estudiante(
-        nombre=data['nombre'],
-        apellido=data['apellido'],
-        nota=data['nota'],
-        aprobado=data.get('aprobado', data['nota'] >= 10.5), # Lógica de aprobación
-        fecha=datetime.utcnow()
-    )
+@app.route('/web/crear', methods=['POST'])
+def web_crear():
+    n = request.form.get('nombre')
+    a = request.form.get('apellido')
+    nt = float(request.form.get('nota'))
+    nt = max(0.0, min(10.0, nt))
+    fecha_fija = datetime(2026, 1, 15)
+    nuevo = Estudiante(nombre=n, apellido=a, nota=nt, aprobado=(nt > 5.0), fecha=fecha_fija)
     db.session.add(nuevo)
     db.session.commit()
-    return jsonify({"mensaje": "Estudiante creado", "id": nuevo.id}), 201
+    return redirect(url_for('index'))
 
-# PUT /estudiantes/<id>: Actualizar
-@app.route('/estudiantes/<int:id>', methods=['PUT'])
-def actualizar_estudiante(id):
+@app.route('/web/editar/<int:id>')
+def web_editar_form(id):
     e = Estudiante.query.get_or_404(id)
-    data = request.get_json()
-    
-    e.nombre = data.get('nombre', e.nombre)
-    e.apellido = data.get('apellido', e.apellido)
-    e.nota = data.get('nota', e.nota)
-    e.aprobado = e.nota >= 10.5
-    
-    db.session.commit()
-    return jsonify({"mensaje": "Datos actualizados correctamente"})
+    todos = Estudiante.query.all()
+    return render_template('index.html', estudiantes=todos, estudiante_editar=e)
 
-# DELETE /estudiantes/<id>: Eliminar
-@app.route('/estudiantes/<int:id>', methods=['DELETE'])
-def eliminar_estudiante(id):
+@app.route('/web/actualizar/<int:id>', methods=['POST'])
+def web_actualizar(id):
+    e = Estudiante.query.get_or_404(id)
+    e.nombre = request.form.get('nombre')
+    e.apellido = request.form.get('apellido')
+    nt = float(request.form.get('nota'))
+    e.nota = max(0.0, min(10.0, nt))
+    e.aprobado = (e.nota > 5.0)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/web/eliminar/<int:id>')
+def web_eliminar(id):
     e = Estudiante.query.get_or_404(id)
     db.session.delete(e)
     db.session.commit()
-    return jsonify({"mensaje": f"Estudiante con ID {id} eliminado"})
+    return redirect(url_for('index'))
 
-# GET /estudiantes/buscar: Búsqueda insensible a mayúsculas
-@app.route('/estudiantes/buscar', methods=['GET'])
-def buscar_estudiantes():
-    nom = request.args.get('nombre', '')
-    ape = request.args.get('apellido', '')
-    
-    query = Estudiante.query.filter(
-        Estudiante.nombre.ilike(f"%{nom}%"),
-        Estudiante.apellido.ilike(f"%{ape}%")
+# --- RUTA DE BÚSQUEDA CORREGIDA PARA NOMBRES COMPLETOS ---
+@app.route('/web/buscar')
+def web_buscar():
+    q = request.args.get('q', '').strip()
+    # Filtro inteligente: Busca en nombre, en apellido, o en la combinación de ambos
+    res = Estudiante.query.filter(
+        (Estudiante.nombre.ilike(f"%{q}%")) | 
+        (Estudiante.apellido.ilike(f"%{q}%")) |
+        ((Estudiante.nombre + " " + Estudiante.apellido).ilike(f"%{q}%"))
     ).all()
-    
-    return jsonify([{"nombre": e.nombre, "apellido": e.apellido, "nota": e.nota} for e in query])
+    return render_template('index.html', estudiantes=res)
 
-# GET /estudiantes/filtrar: Solo aprobados
-@app.route('/estudiantes/filtrar', methods=['GET'])
-def filtrar_aprobados():
+@app.route('/web/filtrar')
+def web_filtrar():
     aprobados = Estudiante.query.filter_by(aprobado=True).all()
-    return jsonify([{"nombre": a.nombre, "apellido": a.apellido, "nota": a.nota} for a in aprobados])
+    return render_template('index.html', estudiantes=aprobados)
 
 if __name__ == '__main__':
     app.run(debug=True)
