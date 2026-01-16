@@ -7,4 +7,4 @@
 3. **Imagina que REST es como hacer una llamada telefónica para preguntar algo y colgar, mientras que WebSockets es dejar la llamada abierta todo el día para hablar en cualquier momento. ¿En qué situación de una aplicación real (ejemplo: un banco o un juego online) crees que es mejor dejar la 'llamada abierta' y por qué?** ... "Para un juego online, es mejor dejar la 'llamada abierta' (WebSockets). En un juego, la posición de los jugadores cambia cada milisegundo; si usáramos REST, el dispositivo tendría que preguntar '¿dónde están los demás?' miles de veces por minuto, saturando el servidor. Con WebSockets, el servidor empuja la información en tiempo real apenas ocurre un cambio."
 
 ## IV. EVIDENCIAS (Capturas de Postman)
-(Aquí pegarás las fotos de tus pruebas)
+(Aquí pegarás las fotos de tus pruebas)![LogoTEAPUESTO](https://github.com/user-attachments/assets/ab638b00-df70-4a07-9cc5-f8f520089f9b)
